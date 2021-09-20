@@ -16,7 +16,7 @@ end module types
 
 
 
-module util
+module RNGutil
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! A utility module for miscellanies useful functions etc.                      !
@@ -29,7 +29,10 @@ module util
   private
 
   public :: stop_E
-  public :: convrand
+  public :: randRange_
+  public :: randRangeArr_
+  public :: randInt_
+  public :: randIntArr_
   
 contains
 
@@ -43,9 +46,9 @@ contains
     STOP
   end subroutine stop_E
 
-  subroutine convrand(R,a,b,c)
+  subroutine randRange_(R,a,b,R_out)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! Convert a random number in the range [0,1) to the range [a,b) informally.    !
+    ! Convert a random number in the range [0,1) to the range [a,b).               !
     ! e.g. if a=-1 and b=1 then R=0 => -1 and R=1 => 1.                            !
     !                                                                              !
     ! INPUTS                                                                       !
@@ -60,14 +63,101 @@ contains
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     implicit none
     real(kind=dp), intent(in)  :: R, a, b
-    real(kind=dp), intent(out) :: c
-    c = ( R * (b-a) ) + a
-  end subroutine convrand
+    real(kind=dp), intent(out) :: R_out
+    R_out = ( R * (b-a) ) + a
+  end subroutine randRange_
+
+  subroutine randRangeArr_(R_in,N,a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Convert an array of random numbers in the range [0,1) to the range [a,b).    !
+    ! e.g. if a=-1 and b=1 then R=0 => -1 and R=1 => 1.                            !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! R_in ::: Real array, random numbers in [0,1), to be converted to the range   !
+    !          [a,b).                                                              !
+    ! N    ::: Integer, size of the array R.                                       !
+    ! a    ::: Real, start of range to convert random numbers to.                  !
+    ! b    ::: Real, end of range to convert random numbers to.                    !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R_out ::: Real array, length N, random numbers R converted to the range [a,b)!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer,                     intent(in)  :: N
+    real(kind=dp), dimension(N), intent(in)  :: R_in
+    real(kind=dp),               intent(in)  :: a, b
+    real(kind=dp), dimension(N), intent(out) :: R_out
+    integer                                  :: iR
+    do iR = 1,N
+      call randRange_(R_in(iR),a,b,R_out(iR))
+    end do
+  end subroutine randRangeArr_
   
-end module util
+  subroutine randInt_(R_in,a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Convert a random float in [0,1) to a random integer in [a,b).                !
+    ! e.g. if a=-1 and b=1 then R=0.0 => -1 and R=0.9999=> 0.                      !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! R_in  ::: Float, a random value in [0,1).                                    !
+    ! a     ::: Integer, start of range of integer to convert R_in to.             !
+    ! b     ::: Integer, end of range of integer to convert R_in to.               !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R_out ::: Integer, random integer in [1,b).                                  !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    real(kind=dp), intent(in)  :: R_in
+    integer,       intent(in)  :: a, b
+    integer,       intent(out) :: R_out
+    real(kind=dp)              :: R_tmp
+    ! First convert the random number to the desired range
+    call randRange_(R_in,real(a,dp),real(b,dp),R_tmp)
+    ! Then convert to an integer, just by flooring
+    R_out = floor(R_tmp)
+  end subroutine randInt_
+
+  subroutine randIntArr_(R_in,N,a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Convert an array of random floats in [0,1) to an array of random integers    !
+    ! in [a,b).                                                                    !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! R_in  ::: 1D float array, a random value in [0,1).                           !
+    ! N     ::: Integer, size of R_in and R_out.                                   !
+    ! a     ::: Integer, start of range of integer to convert R_in to.             !
+    ! b     ::: Integer, end of range of integer to convert R_in to.               !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R_out ::: 1D integer array, size N, contains random integers in [1,b).       !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer,                     intent(in)  :: N
+    real(kind=dp), dimension(N), intent(in)  :: R_in
+    integer,                     intent(in)  :: a, b
+    integer,       dimension(N), intent(out) :: R_out
+    real(kind=dp), dimension(N)              :: R_tmp
+    integer                                  :: Ri
+    ! First convert the random number to the desired range
+    call randRangeArr_(R_in,N,real(a,dp),real(b,dp),R_tmp)
+    ! Then convert to an integer, just by flooring
+    do Ri=1,N
+      R_out(Ri) = floor(R_tmp(Ri))
+    end do
+  end subroutine randIntArr_
+  
+end module RNGutil
 
 
 
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
 !---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
 
 
@@ -88,6 +178,10 @@ module frand
 
   public :: rand
   public :: randarr
+  public :: randRange
+  public :: randRangeArr
+  public :: randInt
+  public :: randIntArr
   
 contains
   
@@ -114,10 +208,118 @@ contains
     call random_number(R)
   end subroutine randarr
 
+  subroutine randRange(a,b,R)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a random number in [0,1) using this modules rand routine, then      !
+    ! scale this random number to be in the range [a,b).                           !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : randRange_
+    implicit none
+    real(kind=dp), intent(in)  :: a, b
+    real(kind=dp), intent(out) :: R
+    real(kind=dp)              :: R_tmp
+    ! Gen a random number
+    call rand(R_tmp)
+    ! And then scale it to the desired range
+    call randRange_(R_tmp,a,b,R)
+  end subroutine randRange
+  
+  subroutine randRangeArr(N,a,b,R)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a 1D array of length N containing random numbers in [0,1) using     !
+    ! this modules rand routine, then scale this random number to be in the        !
+    ! range [a,b).                                                                 !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! N ::: Integer, The size of the desired output array R.                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : randRangeArr_
+    implicit none
+    integer,                     intent(in)  :: N
+    real(kind=dp),               intent(in)  :: a, b
+    real(kind=dp), dimension(N), intent(out) :: R
+    real(kind=dp), dimension(N)              :: R_tmp
+    ! Gen an array of random numbers, temp for now as we scale them into the output array
+    call randarr(N,R_tmp)
+    ! And then scale the array
+    call randRangeArr_(R_tmp,N,a,b,R)
+  end subroutine randRangeArr
+
+  subroutine randInt(a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a random integer in [a,b) using this modules rand routine, then     !
+    ! scale this random number to be an integer in the range [a,b).                !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! a ::: Integer, start of range of integers to scale random number to.         !
+    ! b ::: Integer, end of range of integer to scale random number to.            !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random integer in range [a,b).                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : randInt_
+    implicit none
+    integer,       intent(in)  :: a, b
+    integer,       intent(out) :: R_out
+    real(kind=dp)              :: R_tmp
+    ! Gen a random number
+    call rand(R_tmp)
+    ! And then scale it to the desired range and convert to floored integers
+    call randInt_(R_tmp,a,b,R_out)
+  end subroutine randInt
+  
+  subroutine randIntArr(N,a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a 1D array of length N containing random numbers in [0,1) using     !
+    ! this modules rand routine, then scale this random number to be in the        !
+    ! range [a,b).                                                                 !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! N ::: Integer, The size of the desired output array R.                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : randIntArr_
+    implicit none
+    integer,                     intent(in)  :: N
+    integer,                     intent(in)  :: a, b
+    integer,       dimension(N), intent(out) :: R_out
+    real(kind=dp), dimension(N)              :: R_tmp
+    ! Gen an array of random numbers, temp for now as we scale them into the output array
+    call randarr(N,R_tmp)
+    ! Then scale the array and convert to floored integers
+    call randIntArr_(R_tmp,N,a,b,R_out)
+  end subroutine randIntArr
+  
 end module frand
 
 
 
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
 !---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
 
 
@@ -160,7 +362,11 @@ module lgmrand
   public :: setseed
   public :: rand
   public :: randarr
-  
+  public :: randRange
+  public :: randRangeArr
+  public :: randInt
+  public :: randIntArr
+
 contains
 
   subroutine setseed(seed_in)
@@ -173,7 +379,7 @@ contains
     ! ======                                                                       !
     ! seed_in ::: integer, must be > 0, the value to set R_{j} to.                 !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    use util, only : stop_E
+    use RNGutil, only : stop_E
     implicit none
 
     integer, intent(in) :: seed_in
@@ -265,6 +471,116 @@ contains
     
   end subroutine randarr
 
+  subroutine randRange(a,b,R)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a random number in [0,1) using this modules rand routine, then      !
+    ! scale this random number to be in the range [a,b).                           !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : randRange_
+    implicit none
+    real(kind=dp), intent(in)  :: a, b
+    real(kind=dp), intent(out) :: R
+    real(kind=dp)              :: R_tmp
+    ! Gen a random number
+    call rand(R_tmp)
+    ! And then scale it to the desired range
+    call randRange_(R_tmp,a,b,R)
+  end subroutine randRange
+  
+  subroutine randRangeArr(N,a,b,R)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a 1D array of length N containing random numbers in [0,1) using     !
+    ! this modules rand routine, then scale this random number to be in the        !
+    ! range [a,b).                                                                 !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! N ::: Integer, The size of the desired output array R.                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : randRangeArr_
+    implicit none
+    integer,                     intent(in)  :: N
+    real(kind=dp),               intent(in)  :: a, b
+    real(kind=dp), dimension(N), intent(out) :: R
+    real(kind=dp), dimension(N)              :: R_tmp
+    ! Gen an array of random numbers, temp for now as we scale them into the output array
+    call randarr(N,R_tmp)
+    ! And then scale the array
+    call randRangeArr_(R_tmp,N,a,b,R)
+  end subroutine randRangeArr
+  
+  subroutine randInt(a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a random integer in [a,b) using this modules rand routine, then     !
+    ! scale this random number to be an integer in the range [a,b).                !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! a ::: Integer, start of range of integers to scale random number to.         !
+    ! b ::: Integer, end of range of integer to scale random number to.            !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random integer in range [a,b).                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : randInt_
+    implicit none
+    integer,       intent(in)  :: a, b
+    integer,       intent(out) :: R_out
+    real(kind=dp)              :: R_tmp
+    ! Gen a random number
+    call rand(R_tmp)
+    ! And then scale it to the desired range and convert to floored integers
+    call randInt_(R_tmp,a,b,R_out)
+  end subroutine randInt
+  
+  subroutine randIntArr(N,a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a 1D array of length N containing random numbers in [0,1) using     !
+    ! this modules rand routine, then scale this random number to be in the        !
+    ! range [a,b).                                                                 !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! N ::: Integer, The size of the desired output array R.                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : randIntArr_
+    implicit none
+    integer,                     intent(in)  :: N
+    integer,                     intent(in)  :: a, b
+    integer,       dimension(N), intent(out) :: R_out
+    real(kind=dp), dimension(N)              :: R_tmp
+    ! Gen an array of random numbers, temp for now as we scale them into the output array
+    call randarr(N,R_tmp)
+    ! Then scale the array and convert to floored integers
+    call randIntArr_(R_tmp,N,a,b,R_out)
+  end subroutine randIntArr
+  
 end module lgmrand
   
 
+
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
