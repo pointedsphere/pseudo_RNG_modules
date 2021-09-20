@@ -1,3 +1,6 @@
+# Junk from OSX
+*.DS_Store
+
 # Prerequisites
 *.d
 
@@ -15,6 +18,7 @@
 *.so
 *.dylib
 *.dll
+*.dSYM
 
 # Fortran module files
 *.mod
