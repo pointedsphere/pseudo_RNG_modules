@@ -33,6 +33,7 @@ module RNGutil
   public :: randRangeArr_
   public :: randInt_
   public :: randIntArr_
+  public :: f_intspace_
   
 contains
 
@@ -151,6 +152,60 @@ contains
       R_out(Ri) = floor(R_tmp(Ri))
     end do
   end subroutine randIntArr_
+
+  subroutine f_intspace_(a,b,N,Arr_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate an array of all the integers in [a,b] in ascending order.           !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! a ::: The lowest integer Arr_out(1).                                         !
+    ! b ::: The largest integer Arr_out(N).                                        !
+    ! N ::: The number of integers in [a,b], and size of Arr_out.                  !
+    !       NOTE: [a,b] includes both a and b, e.g. if a=-1, b=1 then N=3.         !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! Arr_out ::: An array of all the integers in [a,b] in ascending order.        !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer,                     intent(in)  :: a, b
+    integer,                     intent(in)  :: N
+    integer,       dimension(N), intent(out) :: Arr_out
+    integer                                  :: Ri
+    ! Start with an error check, to make sure there are N integers in [a,b]
+    select case(a>=b)
+    case(.true.)
+      ! Need to generate from a to be
+      call stop_E("f_intspace_ requires a<b")
+    case default
+      ! Calculate all non zero integers required, remember [a,b] includes a and b
+      Ri = b - a + 1
+      select case(Ri==N)
+      case(.false.)
+        call stop_E("f_intspace_ requires N to be number of integers in [a,b]")
+      end select
+    end select
+    ! Now simple assignment of the integer array
+    select case(a)
+    case(1)
+      ! The array value matches the index
+      do Ri = a, b
+        Arr_out(Ri) = Ri
+      end do
+    case(2:)
+      ! The array value is greater than the index
+      do Ri = 1, N
+        Arr_out(Ri) = Ri + a - 1
+      end do
+    case(:0)
+      ! The array value is less than the index
+      do Ri = 1, N
+        Arr_out(Ri) = Ri + a - 1
+      end do      
+    end select
+      
+  end subroutine f_intspace_
   
 end module RNGutil
 
