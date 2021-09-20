@@ -57,8 +57,8 @@ class rand_test:
         c_cnt = 0 # count of number of points in circle
         for i in range(0,math.floor(N/2)):
             # Convert a pair of random numbers to get a cartesian position in [-1,1]
-            x = RMGutil.randrange_U(self.R[i],-1,1)
-            y = RMGutil.randrange_U(self.R[math.floor(N/2)+i],-1,1)
+            x = rngutil.randrange_(self.R[i],-1,1)
+            y = rngutil.randrange_(self.R[math.floor(N/2)+i],-1,1)
             # See if this point lies within the circle
             if math.hypot(x,y)<=1:
                 # If it does then count it
