@@ -4,6 +4,7 @@ from matplotlib.pyplot import figure
 import sys
 import math
 import scipy.stats as stats
+import time
 
 from RandLib import *
 
@@ -20,8 +21,13 @@ class rand_test:
         self.rand = rand_fn
         self.randarr = rand_arr_fn
 
-        # We need an array of the random numbers always
+        # We need an array of the random numbers always, also time this
+        tic = time.perf_counter()
         self.R = self.randarr(N)
+        toc = time.perf_counter()
+
+        # Calc the average time per random number generation
+        self.ave_time = (toc-tic)/self.N
 
         # Analysis of the random number array
         self.mean      = self.rand_mean()
@@ -80,7 +86,7 @@ if __name__ == "__main__":
     fig.tight_layout(h_pad=2,w_pad=2)
     
     # Histograms
-    histax = plt.subplot2grid((2, 2), (0, 0), colspan=2)
+    histax = plt.subplot2grid((2, 3), (0, 0), colspan=3)
     histax.hist(
         [F.R, lgm.R],
         numbins,
@@ -95,7 +101,7 @@ if __name__ == "__main__":
     histax.set_ylabel('Number of rands in bin')
     
     # Mean barchart
-    meanax = plt.subplot2grid((2, 2), (1, 0), colspan=1)
+    meanax = plt.subplot2grid((2, 3), (1, 0), colspan=1)
     meanax.bar(
         ['Fortran','LGM'],
         [F.mean_diff, lgm.mean_diff],
@@ -104,7 +110,7 @@ if __name__ == "__main__":
     meanax.set_ylabel('|Mean of Rand Arr - 0.5|')
 
     # Pi difference barchart
-    piax = plt.subplot2grid((2, 2), (1, 1), colspan=1)
+    piax = plt.subplot2grid((2, 3), (1, 1), colspan=1)
     piax.bar(
         ['Fortran','LGM'],
         [F.pi_diff, lgm.pi_diff],
@@ -112,6 +118,14 @@ if __name__ == "__main__":
     piax.grid(True)
     piax.set_ylabel('|Estimate of pi - pi|')
 
+    # Calculation time barchart
+    piax = plt.subplot2grid((2, 3), (1, 2), colspan=1)
+    piax.bar(
+        ['Fortran','LGM'],
+        [F.ave_time, lgm.ave_time],
+        )
+    piax.grid(True)
+    piax.set_ylabel('Average calcualtion time (s)')
 
 
     plt.show()
