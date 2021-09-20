@@ -19,11 +19,11 @@ class rand_test:
         self.N = N
         self.numbins = numbins
         self.rand = rand_fn
-        self.randarr = rand_arr_fn
+        self.rand_arr = rand_arr_fn
 
         # We need an array of the random numbers always, also time this
         tic = time.perf_counter()
-        self.R = self.randarr(N)
+        self.R = self.rand_arr(N)
         toc = time.perf_counter()
 
         # Calc the average time per random number generation
@@ -63,8 +63,8 @@ class rand_test:
         c_cnt = 0 # count of number of points in circle
         for i in range(0,math.floor(N/2)):
             # Convert a pair of random numbers to get a cartesian position in [-1,1]
-            x = rngutil.randrange_(self.R[i],-1,1)
-            y = rngutil.randrange_(self.R[math.floor(N/2)+i],-1,1)
+            x = rngutil.rand_range_(self.R[i],-1,1)
+            y = rngutil.rand_range_(self.R[math.floor(N/2)+i],-1,1)
             # See if this point lies within the circle
             if math.hypot(x,y)<=1:
                 # If it does then count it
@@ -79,8 +79,8 @@ if __name__ == "__main__":
     numbins = 100 # Number of bins for graphing/chi-squared testing
 
     # Calcualte the random numbers
-    F   = rand_test(N,numbins,frand.rand,frand.randarr)
-    lgm = rand_test(N,numbins,lgmrand.rand,lgmrand.randarr)
+    F   = rand_test(N,numbins,frand.rand,frand.rand_arr)
+    lgm = rand_test(N,numbins,lgmrand.rand,lgmrand.rand_arr)
 
     fig, ax = plt.subplots(2, 2, figsize=(10,7))
     fig.tight_layout(h_pad=2,w_pad=2)
