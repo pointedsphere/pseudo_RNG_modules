@@ -33,6 +33,7 @@ module RNGutil
   public :: rand_range_arr_
   public :: randInt_
   public :: randIntArr_
+  public :: GCD64_
   
 contains
 
@@ -151,7 +152,51 @@ contains
       R_out(Ri) = floor(R_tmp(Ri))
     end do
   end subroutine randIntArr_
-  
+
+  subroutine GCD64_(a,b,gcd)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Find the greatest common divisor of a and b, i.e. GCD(a,b) and return as     !
+    ! gcd_out.                                                                     !
+    !                                                                              !
+    ! NOTE: This is a 64 bit integer routine, or an integer kind 8 routine.        !
+    !       This is not universally 64 bit, but we cant use int64 from             !
+    !       iso_fortran_env and compile for Python.                                !
+    ! NOTE: We require a<b.                                                        !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! a ::: Integer, kind 8, one value to find GCD of.                             !
+    ! b ::: Integer, kind 8, second value to find GCD of, a<b.                     !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! gcd ::: The greatest common divisor of a and b.                              !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer(kind=8), intent(in)  :: a, b
+    integer(kind=8), intent(out) :: gcd
+    integer(kind=8)              :: a_, b_, tmp
+    ! We want a<b so first check this
+    print *, a, b
+    select case(a<b)
+    case(.false.)
+      call stop_E("GCD64_ requires a<b")
+    case(.true.)
+      ! We have a valid a and b, so set the temporary a and b variables
+      a_ = a
+      b_ = b
+      ! Then loop until we find a divisor
+      do while (b_ /= 0)
+        tmp = a_
+        a_  = b_
+        b_  = mod(tmp,b_)
+      end do
+      gcd = a_
+      return
+    end select
+      
+  end subroutine GCD64_
+
 end module RNGutil
 
 
