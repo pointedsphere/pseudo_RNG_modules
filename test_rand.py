@@ -75,7 +75,7 @@ class rand_test:
     
 if __name__ == "__main__":
 
-    N = 10000     # Number of random numbers to generate
+    N = 100000    # Number of random numbers to generate
     numbins = 100 # Number of bins for graphing/chi-squared testing
     
     # Calcualte the random numbers
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     bbs = rand_test(N,numbins,bbsrand64.rand,bbsrand64.rand_arr)
 
     fig, ax = plt.subplots(2, 3, figsize=(10,7))
-    fig.tight_layout(h_pad=2,w_pad=2)
+    fig.tight_layout(h_pad=2,w_pad=4)
 
     # Histograms
     histax = plt.subplot2grid((2, 3), (0, 0), colspan=3)
