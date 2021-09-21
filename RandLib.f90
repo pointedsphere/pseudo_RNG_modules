@@ -33,8 +33,8 @@ module RNGutil
   public :: stop_E
   public :: rand_range_
   public :: rand_range_arr_
-  public :: randInt_
-  public :: randIntArr_
+  public :: rand_int_
+  public :: rand_int_arr_
   public :: GCD64_
   
 contains
@@ -98,7 +98,7 @@ contains
     end do
   end subroutine rand_range_arr_
   
-  subroutine randInt_(R_in,a,b,R_out)
+  subroutine rand_int_(R_in,a,b,R_out)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Convert a random float in [0,1) to a random integer in [a,b).                !
     ! e.g. if a=-1 and b=1 then R=0.0 => -1 and R=0.9999=> 0.                      !
@@ -122,9 +122,9 @@ contains
     call rand_range_(R_in,real(a,dp),real(b,dp),R_tmp)
     ! Then convert to an integer, just by flooring
     R_out = floor(R_tmp)
-  end subroutine randInt_
+  end subroutine rand_int_
 
-  subroutine randIntArr_(R_in,N,a,b,R_out)
+  subroutine rand_int_arr_(R_in,N,a,b,R_out)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Convert an array of random floats in [0,1) to an array of random integers    !
     ! in [a,b).                                                                    !
@@ -153,7 +153,7 @@ contains
     do Ri=1,N
       R_out(Ri) = floor(R_tmp(Ri))
     end do
-  end subroutine randIntArr_
+  end subroutine rand_int_arr_
 
   subroutine GCD64_(a,b,gcd)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -227,8 +227,8 @@ module frand
   public :: rand_arr
   public :: rand_range
   public :: rand_range_arr
-  public :: randInt
-  public :: randIntArr
+  public :: rand_int
+  public :: rand_int_arr
   
 contains
   
@@ -308,7 +308,7 @@ contains
     call rand_range_arr_(R_tmp,N,a,b,R)
   end subroutine rand_range_arr
 
-  subroutine randInt(a,b,R_out)
+  subroutine rand_int(a,b,R_out)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Generate a random integer in [a,b) using this modules rand routine, then     !
     ! scale this random number to be an integer in the range [a,b).                !
@@ -322,7 +322,7 @@ contains
     ! =======                                                                      !
     ! R ::: Random integer in range [a,b).                                         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    use RNGutil, only : randInt_
+    use RNGutil, only : rand_int_
     implicit none
     integer,       intent(in)  :: a, b
     integer,       intent(out) :: R_out
@@ -330,10 +330,10 @@ contains
     ! Gen a random number
     call rand(R_tmp)
     ! And then scale it to the desired range and convert to floored integers
-    call randInt_(R_tmp,a,b,R_out)
-  end subroutine randInt
+    call rand_int_(R_tmp,a,b,R_out)
+  end subroutine rand_int
   
-  subroutine randIntArr(N,a,b,R_out)
+  subroutine rand_int_arr(N,a,b,R_out)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Generate a 1D array of length N containing random numbers in [0,1) using     !
     ! this modules rand routine, then scale this random number to be in the        !
@@ -349,7 +349,7 @@ contains
     ! =======                                                                      !
     ! R ::: Random number in range [a,b).                                          !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    use RNGutil, only : randIntArr_
+    use RNGutil, only : rand_int_arr_
     implicit none
     integer,                     intent(in)  :: N
     integer,                     intent(in)  :: a, b
@@ -358,8 +358,8 @@ contains
     ! Gen an array of random numbers, temp for now as we scale them into the output array
     call rand_arr(N,R_tmp)
     ! Then scale the array and convert to floored integers
-    call randIntArr_(R_tmp,N,a,b,R_out)
-  end subroutine randIntArr
+    call rand_int_arr_(R_tmp,N,a,b,R_out)
+  end subroutine rand_int_arr
   
 end module frand
 
@@ -387,9 +387,13 @@ module lgmrand
   ! CONTAINS                                                                     !
   ! ========                                                                     !
   !                                                                              !
-  ! setseed ::: Set the seed of lgm RNG.                                         !
-  ! rand    ::: Generate random number in [0,1) using lgm.                       !
-  ! rand_arr ::: Generate 1D array of N random numbers in [0,1) using lgm.        !
+  ! setseed        ::: Set the seed of lgm RNG.                                  !
+  ! rand           ::: Generate random number in [0,1) using lgm.                !
+  ! rand_arr       ::: Generate 1D array of N random numbers in [0,1).           !
+  ! rand_range     ::: Generate a random float in a given range.                 !
+  ! rand_range_arr ::: Generate 1D array of N random numbers in given range.     !
+  ! rand_int       ::: Generate random integer in given range.                   !
+  ! rand_int_arr   ::: Generate 1D array of N random integers in given range.    !
   !                                                                              !
   ! REFERENCES                                                                   !
   ! ==========                                                                   !
@@ -411,8 +415,8 @@ module lgmrand
   public :: rand_arr
   public :: rand_range
   public :: rand_range_arr
-  public :: randInt
-  public :: randIntArr
+  public :: rand_int
+  public :: rand_int_arr
 
 contains
 
@@ -571,7 +575,7 @@ contains
     call rand_range_arr_(R_tmp,N,a,b,R)
   end subroutine rand_range_arr
   
-  subroutine randInt(a,b,R_out)
+  subroutine rand_int(a,b,R_out)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Generate a random integer in [a,b) using this modules rand routine, then     !
     ! scale this random number to be an integer in the range [a,b).                !
@@ -585,7 +589,7 @@ contains
     ! =======                                                                      !
     ! R ::: Random integer in range [a,b).                                         !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    use RNGutil, only : randInt_
+    use RNGutil, only : rand_int_
     implicit none
     integer,       intent(in)  :: a, b
     integer,       intent(out) :: R_out
@@ -593,10 +597,10 @@ contains
     ! Gen a random number
     call rand(R_tmp)
     ! And then scale it to the desired range and convert to floored integers
-    call randInt_(R_tmp,a,b,R_out)
-  end subroutine randInt
+    call rand_int_(R_tmp,a,b,R_out)
+  end subroutine rand_int
   
-  subroutine randIntArr(N,a,b,R_out)
+  subroutine rand_int_arr(N,a,b,R_out)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Generate a 1D array of length N containing random numbers in [0,1) using     !
     ! this modules rand routine, then scale this random number to be in the        !
@@ -612,7 +616,7 @@ contains
     ! =======                                                                      !
     ! R ::: Random number in range [a,b).                                          !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    use RNGutil, only : randIntArr_
+    use RNGutil, only : rand_int_arr_
     implicit none
     integer,                     intent(in)  :: N
     integer,                     intent(in)  :: a, b
@@ -621,8 +625,8 @@ contains
     ! Gen an array of random numbers, temp for now as we scale them into the output array
     call rand_arr(N,R_tmp)
     ! Then scale the array and convert to floored integers
-    call randIntArr_(R_tmp,N,a,b,R_out)
-  end subroutine randIntArr
+    call rand_int_arr_(R_tmp,N,a,b,R_out)
+  end subroutine rand_int_arr
   
 end module lgmrand
 
