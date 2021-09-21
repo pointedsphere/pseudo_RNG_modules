@@ -11,6 +11,8 @@ module types
   
   integer, parameter, public :: sp = selected_real_kind(6,37)
   integer, parameter, public :: dp = selected_real_kind(15,300)
+  integer, parameter, public :: k20 = selected_int_kind(20)
+  integer, parameter, public :: k32 = selected_int_kind(32)
   
 end module types
 
