@@ -75,22 +75,23 @@ class rand_test:
     
 if __name__ == "__main__":
 
-    N = 100000     # Number of random numbers to generate
+    N = 10000     # Number of random numbers to generate
     numbins = 100 # Number of bins for graphing/chi-squared testing
-
+    
     # Calcualte the random numbers
     F   = rand_test(N,numbins,frand.rand,frand.rand_arr)
     lgm = rand_test(N,numbins,lgmrand.rand,lgmrand.rand_arr)
+    bbs = rand_test(N,numbins,bbsrand64.rand,bbsrand64.rand_arr)
 
-    fig, ax = plt.subplots(2, 2, figsize=(10,7))
+    fig, ax = plt.subplots(2, 3, figsize=(10,7))
     fig.tight_layout(h_pad=2,w_pad=2)
-    
+
     # Histograms
     histax = plt.subplot2grid((2, 3), (0, 0), colspan=3)
     histax.hist(
-        [F.R, lgm.R],
+        [F.R, lgm.R, bbs.R],
         numbins,
-        label=['Fortran','LGM'],
+        label=['Fortran','LGM','BBS'],
         histtype='step',
         stacked=False,
         fill=False)
@@ -103,8 +104,8 @@ if __name__ == "__main__":
     # Mean barchart
     meanax = plt.subplot2grid((2, 3), (1, 0), colspan=1)
     meanax.bar(
-        ['Fortran','LGM'],
-        [F.mean_diff, lgm.mean_diff],
+        ['Fortran','LGM','BBS'],
+        [F.mean_diff, lgm.mean_diff, bbs.mean_diff],
         )
     meanax.grid(True)
     meanax.set_ylabel('|Mean of Rand Arr - 0.5|')
@@ -112,8 +113,8 @@ if __name__ == "__main__":
     # Pi difference barchart
     piax = plt.subplot2grid((2, 3), (1, 1), colspan=1)
     piax.bar(
-        ['Fortran','LGM'],
-        [F.pi_diff, lgm.pi_diff],
+        ['Fortran','LGM','BBS'],
+        [F.pi_diff, lgm.pi_diff, bbs.pi_diff],
         )
     piax.grid(True)
     piax.set_ylabel('|Estimate of pi - pi|')
@@ -121,8 +122,8 @@ if __name__ == "__main__":
     # Calculation time barchart
     piax = plt.subplot2grid((2, 3), (1, 2), colspan=1)
     piax.bar(
-        ['Fortran','LGM'],
-        [F.ave_time, lgm.ave_time],
+        ['Fortran','LGM','BBS'],
+        [F.ave_time, lgm.ave_time, bbs.ave_time],
         )
     piax.grid(True)
     piax.set_ylabel('Average calcualtion time (s)')
