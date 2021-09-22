@@ -126,7 +126,7 @@ if __name__ == "__main__":
         ['Fortran','LGM','BBS','LFSR258'],
         [F.ave_time, lgm.ave_time, bbs.ave_time, lfsr.mean_diff],
         )
-    timeax.set_ylim(0, 1E-6)
+    timeax.set_yscale('log')
     timeax.grid(True)
     timeax.set_ylabel('Average calcualtion time (s)')
 
