@@ -125,5 +125,7 @@ Note, pointers could have been utilised, however they were omitted here for port
 ## References
 
 [^1]:``Numerical Recipes in Fortran 77, The Art of Scientific Computing, Vol 1'', Press W.H. and Teukolsky S.A. and Vetterling W.T. and  Flannery B.P., 2nd ed, Cambridge University Press.
+
 [^2]:L. Schrage, ACM Trans. Math. Soft., 5, p132-138 (1979).
+
 [^3]:Blum L, Blum M, Shub M. A Simple Unpredictable Pseudo-Random Number Generator. SIAM J Comput. 1986;15(2):364–83. 
