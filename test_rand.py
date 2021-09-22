@@ -79,9 +79,10 @@ if __name__ == "__main__":
     numbins = 100 # Number of bins for graphing/chi-squared testing
     
     # Calcualte the random numbers
-    F   = rand_test(N,numbins,frand.rand,frand.rand_arr)
-    lgm = rand_test(N,numbins,lgmrand.rand,lgmrand.rand_arr)
-    bbs = rand_test(N,numbins,bbsrand64.rand,bbsrand64.rand_arr)
+    F    = rand_test(N,numbins,frand.rand,frand.rand_arr)
+    lgm  = rand_test(N,numbins,lgmrand.rand,lgmrand.rand_arr)
+    bbs  = rand_test(N,numbins,bbsrand64.rand,bbsrand64.rand_arr)
+    lfsr = rand_test(N,numbins,lfsr258.rand,lfsr258.rand_arr)
 
     fig, ax = plt.subplots(2, 3, figsize=(12,9))
     fig.tight_layout(pad=5,h_pad=4,w_pad=4)
@@ -89,9 +90,9 @@ if __name__ == "__main__":
     # Histograms
     histax = plt.subplot2grid((2, 3), (0, 0), colspan=3)
     histax.hist(
-        [F.R, lgm.R, bbs.R],
+        [F.R, lgm.R, bbs.R, lfsr.R],
         numbins,
-        label=['Fortran','LGM','BBS'],
+        label=['Fortran','LGM','BBS','LFSR258'],
         histtype='step',
         stacked=False,
         fill=False)
@@ -104,8 +105,8 @@ if __name__ == "__main__":
     # Mean barchart
     meanax = plt.subplot2grid((2, 3), (1, 0), colspan=1)
     meanax.bar(
-        ['Fortran','LGM','BBS'],
-        [F.mean_diff, lgm.mean_diff, bbs.mean_diff],
+        ['Fortran','LGM','BBS','LFSR258'],
+        [F.mean_diff, lgm.mean_diff, bbs.mean_diff, lfsr.mean_diff],
         )
     meanax.grid(True)
     meanax.set_ylabel('|Mean of Rand Arr - 0.5|')
@@ -113,20 +114,21 @@ if __name__ == "__main__":
     # Pi difference barchart
     piax = plt.subplot2grid((2, 3), (1, 1), colspan=1)
     piax.bar(
-        ['Fortran','LGM','BBS'],
-        [F.pi_diff, lgm.pi_diff, bbs.pi_diff],
+        ['Fortran','LGM','BBS','LFSR258'],
+        [F.pi_diff, lgm.pi_diff, bbs.pi_diff, lfsr.mean_diff],
         )
     piax.grid(True)
     piax.set_ylabel('|Estimate of pi - pi|')
 
     # Calculation time barchart
-    piax = plt.subplot2grid((2, 3), (1, 2), colspan=1)
-    piax.bar(
-        ['Fortran','LGM','BBS'],
-        [F.ave_time, lgm.ave_time, bbs.ave_time],
+    timeax = plt.subplot2grid((2, 3), (1, 2), colspan=1)
+    timeax.bar(
+        ['Fortran','LGM','BBS','LFSR258'],
+        [F.ave_time, lgm.ave_time, bbs.ave_time, lfsr.mean_diff],
         )
-    piax.grid(True)
-    piax.set_ylabel('Average calcualtion time (s)')
+    timeax.set_ylim(0, 1E-6)
+    timeax.grid(True)
+    timeax.set_ylabel('Average calcualtion time (s)')
 
 
     plt.show()
