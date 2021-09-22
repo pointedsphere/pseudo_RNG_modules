@@ -115,6 +115,20 @@ R_{j+1} = a * R_{j} (mod m)
 then for Blum Blum Shub we must calculate m/a for each j (as a=R_{j}), which requires one 64 bit integer. As this already effects portability, for this test module 64 bit integers were left enabled (or at least emulated) by `selected_int_kind=18`.
 
 
+
+
+
+
+## Module `lfsr258` : LFSR258 RNG
+
+This module implements the LFSR258 algorithm [^4] for RNG by slightly modifying the implementation by Alan Miller [^5] which itself was translated from the C implementation in [^4].
+
+
+
+
+
+
+
 ## Notes
 
 ### Note on Compiling with Makefile
@@ -135,3 +149,7 @@ Note, pointers could have been utilised, however they were omitted here for port
 [^2]:L. Schrage, ACM Trans. Math. Soft., 5, p132-138 (1979).
 
 [^3]:Blum L, Blum M, Shub M. A Simple Unpredictable Pseudo-Random Number Generator. SIAM J Comput. 1986;15(2):364–83. 
+
+[^4]:P. L’Ecuyer, Tables of maximally equidistributed combined lfsr generators, Mathematics of Computation of the American Mathematical Society 68 (225) (1999) 261-269.
+
+[^5]:L'Ecuyer's 1999 random number generator by Alan Miller, available at https://wp.csiro.au/alanmiller/random/lfsr258.f90, accessed 22/09/2021.
