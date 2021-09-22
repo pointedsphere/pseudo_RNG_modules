@@ -175,9 +175,9 @@ contains
     ! gcd ::: The greatest common divisor of a and b.                              !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     implicit none
-    integer(kind=8), intent(in)  :: a, b
-    integer(kind=8), intent(out) :: gcd
-    integer(kind=8)              :: a_, b_, tmp
+    integer(kind=k20), intent(in)  :: a, b
+    integer(kind=k20), intent(out) :: gcd
+    integer(kind=k20)              :: a_, b_, tmp
     ! We want a<b so first check this
     print *, a, b
     select case(a<b)
@@ -468,7 +468,7 @@ contains
     !                                                                              !
     ! RETURNS                                                                      !
     ! =======                                                                      !
-    ! R_ ::: real : A pseudo random value in [0,1).                                !
+    ! R_::: real : A pseudo random value in [0,1).                                 !
     !                                                                              !
     ! REFERENCES                                                                   !
     ! ==========                                                                   !
@@ -672,8 +672,8 @@ module BBSrand64
   private
 
   ! Primes p and q where M = p*q
-  integer(kind=8),   save :: p=4254007              ! = 3 (mod 4)
-  integer(kind=8),   save :: q=1010101039           ! = 3 (mod 4)
+  integer(kind=k20),   save :: p=4254007              ! = 3 (mod 4)
+  integer(kind=k20),   save :: q=1010101039           ! = 3 (mod 4)
   integer(kind=k32), save :: M=4296976890613273_k32 ! p * q
   ! Note: gcd( (p-3)/2, (q-3)/2 ) = 2
   
@@ -709,9 +709,9 @@ contains
     use RNGutil, only : stop_E, GCD64_
     implicit none
 
-    integer(kind=8), intent(in) :: seed_in, p_in, q_in
-    integer(kind=8)             :: s_, p_, q_
-    integer                     :: gcd_cutoff=10
+    integer(kind=k20), intent(in) :: seed_in, p_in, q_in
+    integer(kind=k20)             :: s_, p_, q_
+    integer                       :: gcd_cutoff=10
     
     ! Perform initial checks on the inputs
 

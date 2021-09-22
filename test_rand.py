@@ -53,7 +53,7 @@ class rand_test:
         binned = np.bincount(np.digitize(self.R, bins=np.linspace(0+(1/self.numbins),1,self.numbins)))
         
         # The expected height of each bin
-        e = N/numbins
+        e = self.N/self.numbins
 
         # Return the chi square with the scipy state module function
         return stats.chisquare(binned,f_exp=np.full(shape=self.numbins,fill_value=e))
@@ -83,8 +83,8 @@ if __name__ == "__main__":
     lgm = rand_test(N,numbins,lgmrand.rand,lgmrand.rand_arr)
     bbs = rand_test(N,numbins,bbsrand64.rand,bbsrand64.rand_arr)
 
-    fig, ax = plt.subplots(2, 3, figsize=(10,7))
-    fig.tight_layout(h_pad=2,w_pad=4)
+    fig, ax = plt.subplots(2, 3, figsize=(12,9))
+    fig.tight_layout(pad=5,h_pad=4,w_pad=4)
 
     # Histograms
     histax = plt.subplot2grid((2, 3), (0, 0), colspan=3)
