@@ -4,7 +4,7 @@ Pseudo random number generator modules in fortran, with option to compile as pyt
 
 ## Simple Python Random Testing Script
 
-Note once compiled with the makefile, test_rand.py runs a few tests. It bins 100000 random values in [0,1) generated with each method into 100 bins and plots the results on the top.
+Oote once compiled with the makefile, test_rand.py can be used to run a few tests. It bins 100000 random values in [0,1) generated with each method into 100 bins and plots the results on the top.
 
 Then on the bottom (left) it calcualtes the mean (which should be 0.5), subtracts 0.5 and plots the magnitude of the result. The script also estimates pi using the random numbers and plots the magnitude of the difference between the extimated and actual value of pi in the bottom middle. Bottom right is the average calcualtion time for a single random number.
 
