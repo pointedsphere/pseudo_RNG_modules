@@ -37,3 +37,9 @@
 
 # emacs backup files
 .#*
+
+# Fort files
+fort.*
+
+# Test Files
+test.f90

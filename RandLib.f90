@@ -941,6 +941,9 @@ end module BBSrand64
 
 module lfsr258
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Use the LFSR method as outlined in [1] to generate pseudo random numbers.    !
+  ! NOTE: This module utilises the routine by Alan Miller given at [2], which    !
+  !       is a translation of the C implementation in [1].                       !
   !                                                                              !
   ! CONTAINS                                                                     !
   ! ========                                                                     !
