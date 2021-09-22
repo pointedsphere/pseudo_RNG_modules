@@ -3,6 +3,7 @@ module types
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! A simple module just for the single (sp) and double (dp) precision types     !
   ! explicitly defined.                                                          !
+  ! Also define some selected integer kinds to avoid having to use kind=4 etc.   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   implicit none
@@ -22,7 +23,22 @@ end module types
 module RNGutil
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! A utility module for miscellanies useful functions etc.                      !
+  ! A utility module for miscellaneous useful functions etc.                     !
+  !                                                                              !
+  ! CONTAINS                                                                     !
+  ! ========                                                                     !
+  ! - stop_E          ::: Call STOP to exit program, with an error message given !
+  !                       as input.                                              !
+  ! - rand_range_     ::: Convert a number from [0,1) to [a,b), with a and b     !
+  !                       given as inputs.                                       !
+  ! - rand_range_arr_ ::: Convert an array of random values in [0,1) to an array !
+  !                       containing random elements scaled to be in [a,b).      !
+  ! - rand_int_       ::: Convert a random value in [0,1) to a scaled random     !
+  !                       integer in [a,b).                                      !
+  ! - rand_int_arr_   ::: Convert an array of floats in [0,1) to an array        !
+  !                       containing elements scaled to integers in [1,b).       !
+  ! - GCD64_          ::: Find the greatest common divisor of two input integers,!
+  !                       where all integers are 64 bit.                         !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   use types
@@ -41,7 +57,9 @@ module RNGutil
 contains
 
   subroutine stop_E(err_msg)
-    ! Call stop with an error message
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Call STOP with an error message.                                             !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     implicit none
     character(len=*) :: err_msg
     print *, ""
