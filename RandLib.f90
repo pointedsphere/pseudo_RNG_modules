@@ -918,3 +918,288 @@ end module BBSrand64
 !---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
 !---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
 !---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
+
+
+
+module lfsr258
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !                                                                              !
+  ! CONTAINS                                                                     !
+  ! ========                                                                     !
+  ! setseed        ::: Set the seed of lgm RNG.                                  !
+  ! rand           ::: Generate random number in [0,1) using lgm.                !
+  ! rand_arr       ::: Generate 1D array of N random numbers in [0,1).           !
+  ! rand_range     ::: Generate a random float in a given range.                 !
+  ! rand_range_arr ::: Generate 1D array of N random numbers in given range.     !
+  ! rand_int       ::: Generate random integer in given range.                   !
+  ! rand_int_arr   ::: Generate 1D array of N random integers in given range.    !
+  !                                                                              !
+  ! REFERENCES                                                                   !
+  ! ==========                                                                   !
+  ! [1] P. L’Ecuyer, Tables of maximally equidistributed combined lfsr           !
+  !     generators, Mathematics of Computation of the American Mathematical      !
+  !     Society 68 (225) (1999) 261–269.                                         !
+  ! [2] L'Ecuyer's 1999 random number generator by Alan Miller, available at     !
+  !     https://wp.csiro.au/alanmiller/random/lfsr258.f90, accessed 22/09/2021.  !
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  use types
+  implicit none
+
+  private
+
+  ! Seed values
+  integer(kind=k18), save  :: s1 = 153587801, s2 = -759022222, s3 = 1288503317, &
+    s4 = -1718083407, s5 = -123456789
+  
+  public :: set_seed
+  public :: lfsr258_
+  public :: rand
+  public :: rand_arr
+  public :: rand_range
+  public :: rand_range_arr
+  public :: rand_int
+  public :: rand_int_arr
+
+contains
+  
+  subroutine set_seed(i1, i2, i3, i4, i5)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Set the seed values for the lfsr258 method, this requires 5 integer (64 bit) !
+    ! values.                                                                      !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! i1, i2, i3, i4, i5 :: 64 bit integer seeds.                                  !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+
+    integer(kind=k18), intent(in) :: i1, i2, i3, i4, i5
+
+    s1 = i1
+    s2 = i2
+    s3 = i3
+    s4 = i4
+    s5 = i5
+    if (iand(s1,      -2_k18) == 0) s1 = i1 - 8388607_k18
+    if (iand(s2,    -512_k18) == 0) s2 = i2 - 8388607_k18
+    if (iand(s3,   -4096_k18) == 0) s3 = i3 - 8388607_k18
+    if (iand(s4, -131072_k18) == 0) s4 = i4 - 8388607_k18
+    if (iand(s5,-8388608_k18) == 0) s5 = i5 - 8388607_k18
+
+    return
+  end subroutine set_seed
+
+  function lfsr258_() result(R_)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Calculate a random number in [0,1) with lfsr258 based on the implementation  !
+    ! in [1], taken from [2] with minor adaptations.                               !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Float, random number in [0,1).                                         !
+    !                                                                              !
+    ! NOTES                                                                        !
+    ! =====                                                                        !
+    ! Original notes from Alan Millers function:                                   !
+    !                                                                              !
+    ! Generates a random number between 0 and 1.  Translated from C function in:   !
+    ! L'Ecuyer, P. (1999) `Tables of maximally equidistributed combined LFSR       !
+    ! generators', Math. of Comput., 68, 261-269.                                  !
+    !                                                                              !
+    ! The cycle length is claimed to be about 2^(258) or about 4.6 x 10^77.        !
+    ! Actually - (2^63 - 1).(2^55 - 1).(2^52 - 1).(2^47 - 1).(2^41 - 1)            !
+    !                                                                              !
+    ! REFERENCES                                                                   !
+    ! ==========                                                                   !
+    ! [1] P. L’Ecuyer, Tables of maximally equidistributed combined lfsr           !
+    !     generators, Mathematics of Computation of the American Mathematical      !
+    !     Society 68 (225) (1999) 261–269.                                         !
+    ! [2] L'Ecuyer's 1999 random number generator by Alan Miller, available at     !
+    !     https://wp.csiro.au/alanmiller/random/lfsr258.f90, accessed 22/09/2021.  !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    real(kind=dp) :: R_
+
+    integer(kind=k18)   :: b
+
+    ! N.B. ishft(i,j) is a bitwise (non-circular) shift operation;
+    !      to the left if j > 0, otherwise to the right.
+
+    b  = ishft( ieor( ishft(s1,1_k18), s1), -53_k18)
+    s1 = ieor( ishft( iand(s1,-2_k18), 10_k18), b)
+    b  = ishft( ieor( ishft(s2,24_k18), s2), -50_k18)
+    s2 = ieor( ishft( iand(s2,-512_k18), 5_k18), b)
+    b  = ishft( ieor( ishft(s3,3_k18), s3), -23_k18)
+    s3 = ieor( ishft( iand(s3,-4096_k18), 29_k18), b)
+    b  = ishft( ieor( ishft(s4,5_k18), s4), -24_k18)
+    s4 = ieor( ishft( iand(s4,-131072_k18), 23_k18), b)
+    b  = ishft( ieor( ishft(s5,3_k18), s5), -33_k18)
+    s5 = ieor( ishft( iand(s5,-8388608_k18), 8_k18), b)
+
+    ! The constant below is the reciprocal of (2^64 - 1)
+    R_ = ieor( ieor( ieor( ieor(s1,s2), s3), s4), s5)  &
+      * 5.4210108624275221E-20_dp + 0.5_dp
+
+    return
+  end function lfsr258_
+  
+  subroutine rand(R)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Calculate a random number in [0,1) with the Blum Blum Shub RNG [1].          !
+    ! This is done using                                                           !
+    !                                                                              !
+    !      R_{j+1} = R_{j}^2 (mod M)                                               !
+    !                                                                              !
+    ! Where M=p*q for prime p and q. Also we require gcd((p-3)/2,(q-3)/2)          !
+    ! sufficiently small and R_{0} coprime to M.                                   !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Float, random number in [0,1).                                         !
+    !                                                                              !
+    ! REFERENCES                                                                   !
+    ! ==========                                                                   !
+    ! [1] Blum L, Blum M, Shub M. A Simple Unpredictable Pseudo-Random Number      !
+    !     Generator. SIAM J Comput. 1986;15(2):364–83.                             !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    real(kind=dp), intent(out) :: R
+    ! Calculate the current value, which is the `last' value for next call
+    R = lfsr258_()
+  end subroutine rand
+
+  subroutine rand_arr(N,Rarr)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate an array of length N containing random numbers in [0,1) generated   !
+    ! with BBS.                                                                    !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! N ::: Integer, number of random numbers in Rarr (also length of Rarr).       !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! Rarr ::: 1D float array, length N, contains random floats in [0,1).          !
+    !                                                                              !
+    ! REFERENCES                                                                   !
+    ! ==========                                                                   !
+    ! [1] Blum L, Blum M, Shub M. A Simple Unpredictable Pseudo-Random Number      !
+    !     Generator. SIAM J Comput. 1986;15(2):364–83.                             !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer,                     intent(in)  :: N
+    real(kind=dp), dimension(N), intent(out) :: Rarr
+    integer                                  :: i_
+    do i_=1,N
+      call rand(Rarr(i_))
+    end do
+  end subroutine rand_arr
+
+  subroutine rand_range(a,b,R)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a random number in [0,1) using this modules rand routine, then      !
+    ! scale this random number to be in the range [a,b).                           !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : rand_range_
+    implicit none
+    real(kind=dp), intent(in)  :: a, b
+    real(kind=dp), intent(out) :: R
+    real(kind=dp)              :: R_tmp
+    ! Gen a random number
+    call rand(R_tmp)
+    ! And then scale it to the desired range
+    call rand_range_(R_tmp,a,b,R)
+  end subroutine rand_range
+  
+  subroutine rand_range_arr(N,a,b,R)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a 1D array of length N containing random numbers in [0,1) using     !
+    ! this modules rand routine, then scale this random number to be in the        !
+    ! range [a,b).                                                                 !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! N ::: Integer, The size of the desired output array R.                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : rand_range_arr_
+    implicit none
+    integer,                     intent(in)  :: N
+    real(kind=dp),               intent(in)  :: a, b
+    real(kind=dp), dimension(N), intent(out) :: R
+    real(kind=dp), dimension(N)              :: R_tmp
+    ! Gen an array of random numbers, temp for now as we scale them into the output array
+    call rand_arr(N,R_tmp)
+    ! And then scale the array
+    call rand_range_arr_(R_tmp,N,a,b,R)
+  end subroutine rand_range_arr
+  
+  subroutine rand_int(a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a random integer in [a,b) using this modules rand routine, then     !
+    ! scale this random number to be an integer in the range [a,b).                !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! a ::: Integer, start of range of integers to scale random number to.         !
+    ! b ::: Integer, end of range of integer to scale random number to.            !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random integer in range [a,b).                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : rand_int_
+    implicit none
+    integer,       intent(in)  :: a, b
+    integer,       intent(out) :: R_out
+    real(kind=dp)              :: R_tmp
+    ! Gen a random number
+    call rand(R_tmp)
+    ! And then scale it to the desired range and convert to floored integers
+    call rand_int_(R_tmp,a,b,R_out)
+  end subroutine rand_int
+  
+  subroutine rand_int_arr(N,a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a 1D array of length N containing random numbers in [0,1) using     !
+    ! this modules rand routine, then scale this random number to be in the        !
+    ! range [a,b).                                                                 !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! N ::: Integer, The size of the desired output array R.                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : rand_int_arr_
+    implicit none
+    integer,                     intent(in)  :: N
+    integer,                     intent(in)  :: a, b
+    integer,       dimension(N), intent(out) :: R_out
+    real(kind=dp), dimension(N)              :: R_tmp
+    ! Gen an array of random numbers, temp for now as we scale them into the output array
+    call rand_arr(N,R_tmp)
+    ! Then scale the array and convert to floored integers
+    call rand_int_arr_(R_tmp,N,a,b,R_out)
+  end subroutine rand_int_arr
+  
+end module lfsr258
+
