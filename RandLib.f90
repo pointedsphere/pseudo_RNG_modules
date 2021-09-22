@@ -53,6 +53,9 @@ module RNGutil
   public :: rand_int_
   public :: rand_int_arr_
   public :: GCD64_
+  public :: XOR_char_
+  public :: rule90_char_
+  public :: rule150_char_
   
 contains
 
@@ -217,6 +220,76 @@ contains
     end select
       
   end subroutine GCD64_
+
+  function XOR_char_(XOR1,XOR2) result(XORED)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Carry out the XOR operation on the input characters "1" and "0".             !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! XOR1 ::: Character, must be either "0" or "1", first bit represented as a    !
+    !          character to be XORed.                                              !
+    ! XOR2 ::: Character, must be either "0" or "1", second bit represented as a   !
+    !          character to be XORed.                                              !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! XORED ::: Character, either "0" or "1", XOR1 XORed with XOR2.                !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    character(len=*), intent(in) :: XOR1, XOR2
+    character(len=1)             :: XORED
+
+    select case(XOR1)
+    case("1")
+      select case(XOR2)
+      case("1")
+        XORED = "0"
+        return
+      case("0")
+        XORED = "1"
+        return
+      case default
+        call stop_E("CAn only XOR_char_ single characters that are 1 or 0")
+      end select
+    case("0")
+      select case(XOR2)
+      case("1")
+        XORED = "1"
+        return
+      case("0")
+        XORED = "0"
+        return
+      case default
+        call stop_E("CAn only XOR_char_ single characters that are 1 or 0")
+      end select
+    case default
+      call stop_E("CAn only XOR_char_ single characters that are 1 or 0")
+    end select
+
+  end function XOR_char_
+  
+  function rule90_char_(s_im1,s_i,s_ip1) result(ruled)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Cellular automata rule 90, i.e.                                              !
+    !     s_i(t+1) = s_i-1(t) XOR s_i+1(t)                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    character(len=1), intent(in)  :: s_im1, s_i, s_ip1
+    character(len=1)               :: ruled
+    ruled = XOR_char_(s_im1,s_ip1)
+  end function rule90_char_
+
+  function rule150_char_(s_im1,s_i,s_ip1) result(ruled)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Cellular automata rule 150, i.e.                                             !
+    !     s_i(t+1) = s_i-1(t) XOR s_i(t) XOR s_i+1(t)                              !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    character(len=1), intent(in)  :: s_im1, s_i, s_ip1
+    character(len=1)              :: ruled
+    ruled = XOR_char_(s_im1,XOR_char_(s_i,s_ip1))
+  end function rule150_char_
 
 end module RNGutil
 
