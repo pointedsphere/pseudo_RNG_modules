@@ -11,6 +11,7 @@ module types
   
   integer, parameter, public :: sp = selected_real_kind(6,37)
   integer, parameter, public :: dp = selected_real_kind(15,300)
+  integer, parameter, public :: k18 = selected_int_kind(18)
   integer, parameter, public :: k20 = selected_int_kind(20)
   integer, parameter, public :: k32 = selected_int_kind(32)
   
@@ -175,9 +176,9 @@ contains
     ! gcd ::: The greatest common divisor of a and b.                              !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     implicit none
-    integer(kind=k20), intent(in)  :: a, b
-    integer(kind=k20), intent(out) :: gcd
-    integer(kind=k20)              :: a_, b_, tmp
+    integer(kind=k18), intent(in)  :: a, b
+    integer(kind=k18), intent(out) :: gcd
+    integer(kind=k18)              :: a_, b_, tmp
     ! We want a<b so first check this
     print *, a, b
     select case(a<b)
@@ -672,8 +673,8 @@ module BBSrand64
   private
 
   ! Primes p and q where M = p*q
-  integer(kind=k20),   save :: p=4254007              ! = 3 (mod 4)
-  integer(kind=k20),   save :: q=1010101039           ! = 3 (mod 4)
+  integer(kind=k18),   save :: p=4254007              ! = 3 (mod 4)
+  integer(kind=k18),   save :: q=1010101039           ! = 3 (mod 4)
   integer(kind=k32), save :: M=4296976890613273_k32 ! p * q
   ! Note: gcd( (p-3)/2, (q-3)/2 ) = 2
   
@@ -709,8 +710,8 @@ contains
     use RNGutil, only : stop_E, GCD64_
     implicit none
 
-    integer(kind=k20), intent(in) :: seed_in, p_in, q_in
-    integer(kind=k20)             :: s_, p_, q_
+    integer(kind=k18), intent(in) :: seed_in, p_in, q_in
+    integer(kind=k18)             :: s_, p_, q_
     integer                       :: gcd_cutoff=10
     
     ! Perform initial checks on the inputs
