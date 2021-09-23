@@ -56,6 +56,9 @@ module RNGutil
   public :: XOR_char_
   public :: rule90_char_
   public :: rule150_char_
+  public :: rule90_
+  public :: rule150_
+  public :: rule_90_150_
   
 contains
 
@@ -268,6 +271,28 @@ contains
     end select
 
   end function XOR_char_
+
+  function rule90_(s_im1,s_i,s_ip1) result(ruled)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Cellular automata rule 90, i.e.                                              !
+    !     s_i(t+1) = s_i-1(t) XOR s_i+1(t)                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer, intent(in)  :: s_im1, s_i, s_ip1
+    integer               :: ruled
+    ruled = ieor(s_im1,s_ip1)
+  end function rule90_
+
+  function rule150_(s_im1,s_i,s_ip1) result(ruled)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Cellular automata rule 150, i.e.                                             !
+    !     s_i(t+1) = s_i-1(t) XOR s_i(t) XOR s_i+1(t)                              !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer, intent(in)  :: s_im1, s_i, s_ip1
+    integer              :: ruled
+    ruled = ieor(s_im1,ieor(s_i,s_ip1))
+  end function rule150_
   
   function rule90_char_(s_im1,s_i,s_ip1) result(ruled)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -291,6 +316,62 @@ contains
     ruled = XOR_char_(s_im1,XOR_char_(s_i,s_ip1))
   end function rule150_char_
 
+  subroutine rule_90_150_(rule_in,N_bit,rule_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Take integer represented in binary as an array of 1s and 0s then perform rule!
+    ! 90, then rule 150 and return the resultant array of 1s and 0s.               !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! rule_in ::: 1D array of integers, each element should be a 1 or 0. The array !
+    !             represents an integer in binary.                                 !
+    ! N_bit   ::: Integer, the number of bits in the integer represented by        !
+    !             rule_in, i.e. length of rule_in.                                 !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! rule_out ::: 1D array of length N_bits, the input array rule_in with rule 90,!
+    !              then rule 150 applied. Will only contain 1s or 0s.              !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer,                   intent(in)  :: N_bit
+    integer, dimension(N_bit), intent(in)  :: rule_in
+    integer, dimension(N_bit), intent(out) :: rule_out
+
+    integer, dimension(N_bit) :: tmp
+    integer                   :: k_
+    
+    ! First apply rule 90 to the input
+    ! Note we copy this to tmp as we want to find next time step in rule 150 after 90
+    do k_=1,N_bit
+      if (k_==1) then
+        ! Need to wraparound the periodic boundary for the first
+        tmp(1)   = rule90_(rule_in(N_bit),rule_in(1),rule_in(2))
+      else if (k_==N_bit) then
+        ! Also need to wraparound the periodic boundary for the last
+        tmp(N_bit) = rule90_(rule_in(N_bit-1),rule_in(N_bit),rule_in(1))
+      else
+        ! No wraparound needed in the middle of the string
+        tmp(k_) = rule90_(rule_in(k_-1),rule_in(k_),rule_in(k_+1))
+      end if
+    end do
+    
+    ! Now apply rule 150 and return
+    do k_=1,N_bit
+      if (k_==1) then
+        ! Need to wraparound the periodic boundary for the first
+        rule_out(1)   = rule150_(rule_in(N_bit),rule_in(1),rule_in(2))
+      else if (k_==N_bit) then
+        ! Also need to wraparound the periodic boundary for the last
+        rule_out(N_bit) = rule150_(rule_in(N_bit-1),rule_in(N_bit),rule_in(1))
+      else
+        ! No wraparound needed in the middle of the string
+        rule_out(k_) = rule150_(rule_in(k_-1),rule_in(k_),rule_in(k_+1))
+      end if
+    end do
+    
+  end subroutine rule_90_150_
+  
 end module RNGutil
 
 
