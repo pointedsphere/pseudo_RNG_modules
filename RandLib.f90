@@ -59,6 +59,7 @@ module RNGutil
   public :: rule90_
   public :: rule150_
   public :: rule_90_150_
+  public :: bitarr2int
   
 contains
 
@@ -371,6 +372,46 @@ contains
     end do
     
   end subroutine rule_90_150_
+
+  subroutine bitarr2int(bitArr,N_bits,bitInt)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Convert an input array which contains only 1s and 0s to the integer          !
+    ! represented by the binary number in the array.                               !
+    ! E.g. an input array [0,0,0,1,0,1,1,0] would return 22.                       !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! bitArr ::: Integer array, must contain only 1s or 0s, this array represents  !
+    !            an integer in binary and will be converted to a base 10 integer.  !
+    ! N_bits ::: Integer, the number of bits in the binary representation of the   !
+    !            integer, i.e. the length of bitArr.                               !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! bitInt ::: Integer, the integer represented in bitArr in base 10.            !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+
+    integer,                    intent(in)  :: N_bits
+    integer, dimension(N_bits), intent(in)  :: bitArr
+    integer,                    intent(out) :: bitInt
+
+    integer :: pow, i_bit
+
+    ! Initialise everything to 0
+    bitInt = 0
+    pow = 0
+
+    ! Now loop through all elements of the bit array adding their respective values
+    ! to the counter
+    i_bit = N_bits
+    do while (i_bit>0)
+      bitInt = bitInt + ( bitArr(i_bit) * 2**pow )
+      pow   = pow   + 1
+      i_bit = i_bit - 1
+    end do
+    
+  end subroutine bitarr2int
   
 end module RNGutil
 
