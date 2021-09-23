@@ -205,7 +205,6 @@ contains
     integer(kind=k18), intent(out) :: gcd
     integer(kind=k18)              :: a_, b_, tmp
     ! We want a<b so first check this
-    print *, a, b
     select case(a<b)
     case(.false.)
       call stop_E("GCD64_ requires a<b")
