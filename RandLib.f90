@@ -59,7 +59,7 @@ module RNGutil
   public :: rule90_
   public :: rule150_
   public :: rule_90_150_
-  public :: bitarr2int_
+  public :: bitarr2int32_
   
 contains
 
@@ -373,11 +373,13 @@ contains
     
   end subroutine rule_90_150_
 
-  subroutine bitarr2int_(bitArr,N_bits,bitInt)
+  subroutine bitarr2int32_(bitArr,N_bits,bitInt)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Convert an input array which contains only 1s and 0s to the integer          !
     ! represented by the binary number in the array.                               !
     ! E.g. an input array [0,0,0,1,0,1,1,0] would return 22.                       !
+    !                                                                              !
+    ! This routine only works for 32 bit integers, where 1 bit is the sign.        !
     !                                                                              !
     ! INPUTS                                                                       !
     ! ======                                                                       !
@@ -411,7 +413,7 @@ contains
       i_bit = i_bit - 1
     end do
     
-  end subroutine bitarr2int_
+  end subroutine bitarr2int32_
   
 end module RNGutil
 
