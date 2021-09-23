@@ -129,6 +129,17 @@ This module implements the LFSR258 algorithm [^4] for RNG by slightly modifying 
 
 
 
+## Module `CA32` : Cellula Atomata RNG
+
+Use a cellular automata in 1D to generate a random bit string, using rule 90 and 150 (over 1024 timesteps) following [^6]. This approach follows [^7] but with rules 90 then 150 rather than rule 30 then 45.
+
+It is clearly seen from initial results that not only is this method incredibly costly, but also a rather poor RNG. An improvement on this is left to future work, as improvement would probably require using a 2D cellular automata which would increase cost even further.
+
+
+
+
+
+
 ## Notes
 
 ### Note on Compiling with Makefile
@@ -153,3 +164,7 @@ Note, pointers could have been utilised, however they were omitted here for port
 [^4]:P. L’Ecuyer, Tables of maximally equidistributed combined lfsr generators, Mathematics of Computation of the American Mathematical Society 68 (225) (1999) 261-269.
 
 [^5]:L'Ecuyer's 1999 random number generator by Alan Miller, available at https://wp.csiro.au/alanmiller/random/lfsr258.f90, accessed 22/09/2021.
+
+[^6]:Tomassini M, Perrenoud M. Cryptography with cellular automata. Appl Soft Comput. 2001;1(2):151–60.
+
+[^7]:Wolfram S. Random sequence generation by cellular automata. Vol. 7, Advances in Applied Mathematics. 1986. 123–169 p.
