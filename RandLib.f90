@@ -59,7 +59,7 @@ module RNGutil
   public :: rule90_
   public :: rule150_
   public :: rule_90_150_
-  public :: bitarr2int
+  public :: bitarr2int_
   
 contains
 
@@ -373,7 +373,7 @@ contains
     
   end subroutine rule_90_150_
 
-  subroutine bitarr2int(bitArr,N_bits,bitInt)
+  subroutine bitarr2int_(bitArr,N_bits,bitInt)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Convert an input array which contains only 1s and 0s to the integer          !
     ! represented by the binary number in the array.                               !
@@ -411,7 +411,7 @@ contains
       i_bit = i_bit - 1
     end do
     
-  end subroutine bitarr2int
+  end subroutine bitarr2int_
   
 end module RNGutil
 
