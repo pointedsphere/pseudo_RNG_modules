@@ -41,5 +41,5 @@
 # Fort files
 fort.*
 
-# Test Files
+# Testing files
 test.f90

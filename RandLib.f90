@@ -3,6 +3,7 @@ module types
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! A simple module just for the single (sp) and double (dp) precision types     !
   ! explicitly defined.                                                          !
+  ! Also define some selected integer kinds to avoid having to use kind=4 etc.   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   implicit none
@@ -22,7 +23,22 @@ end module types
 module RNGutil
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! A utility module for miscellanies useful functions etc.                      !
+  ! A utility module for miscellaneous useful functions etc.                     !
+  !                                                                              !
+  ! CONTAINS                                                                     !
+  ! ========                                                                     !
+  ! - stop_E          ::: Call STOP to exit program, with an error message given !
+  !                       as input.                                              !
+  ! - rand_range_     ::: Convert a number from [0,1) to [a,b), with a and b     !
+  !                       given as inputs.                                       !
+  ! - rand_range_arr_ ::: Convert an array of random values in [0,1) to an array !
+  !                       containing random elements scaled to be in [a,b).      !
+  ! - rand_int_       ::: Convert a random value in [0,1) to a scaled random     !
+  !                       integer in [a,b).                                      !
+  ! - rand_int_arr_   ::: Convert an array of floats in [0,1) to an array        !
+  !                       containing elements scaled to integers in [1,b).       !
+  ! - GCD64_          ::: Find the greatest common divisor of two input integers,!
+  !                       where all integers are 64 bit.                         !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   use types
@@ -37,11 +53,20 @@ module RNGutil
   public :: rand_int_
   public :: rand_int_arr_
   public :: GCD64_
+  public :: XOR_char_
+  public :: rule90_char_
+  public :: rule150_char_
+  public :: rule90_
+  public :: rule150_
+  public :: rule_90_150_
+  public :: bitarr2int32_
   
 contains
 
   subroutine stop_E(err_msg)
-    ! Call stop with an error message
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Call STOP with an error message.                                             !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     implicit none
     character(len=*) :: err_msg
     print *, ""
@@ -180,7 +205,6 @@ contains
     integer(kind=k18), intent(out) :: gcd
     integer(kind=k18)              :: a_, b_, tmp
     ! We want a<b so first check this
-    print *, a, b
     select case(a<b)
     case(.false.)
       call stop_E("GCD64_ requires a<b")
@@ -200,6 +224,196 @@ contains
       
   end subroutine GCD64_
 
+  function XOR_char_(XOR1,XOR2) result(XORED)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Carry out the XOR operation on the input characters "1" and "0".             !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! XOR1 ::: Character, must be either "0" or "1", first bit represented as a    !
+    !          character to be XORed.                                              !
+    ! XOR2 ::: Character, must be either "0" or "1", second bit represented as a   !
+    !          character to be XORed.                                              !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! XORED ::: Character, either "0" or "1", XOR1 XORed with XOR2.                !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    character(len=*), intent(in) :: XOR1, XOR2
+    character(len=1)             :: XORED
+
+    select case(XOR1)
+    case("1")
+      select case(XOR2)
+      case("1")
+        XORED = "0"
+        return
+      case("0")
+        XORED = "1"
+        return
+      case default
+        call stop_E("CAn only XOR_char_ single characters that are 1 or 0")
+      end select
+    case("0")
+      select case(XOR2)
+      case("1")
+        XORED = "1"
+        return
+      case("0")
+        XORED = "0"
+        return
+      case default
+        call stop_E("CAn only XOR_char_ single characters that are 1 or 0")
+      end select
+    case default
+      call stop_E("CAn only XOR_char_ single characters that are 1 or 0")
+    end select
+
+  end function XOR_char_
+
+  function rule90_(s_im1,s_i,s_ip1) result(ruled)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Cellular automata rule 90, i.e.                                              !
+    !     s_i(t+1) = s_i-1(t) XOR s_i+1(t)                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer, intent(in)  :: s_im1, s_i, s_ip1
+    integer               :: ruled
+    ruled = ieor(s_im1,s_ip1)
+  end function rule90_
+
+  function rule150_(s_im1,s_i,s_ip1) result(ruled)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Cellular automata rule 150, i.e.                                             !
+    !     s_i(t+1) = s_i-1(t) XOR s_i(t) XOR s_i+1(t)                              !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer, intent(in)  :: s_im1, s_i, s_ip1
+    integer              :: ruled
+    ruled = ieor(s_im1,ieor(s_i,s_ip1))
+  end function rule150_
+  
+  function rule90_char_(s_im1,s_i,s_ip1) result(ruled)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Cellular automata rule 90, i.e.                                              !
+    !     s_i(t+1) = s_i-1(t) XOR s_i+1(t)                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    character(len=1), intent(in)  :: s_im1, s_i, s_ip1
+    character(len=1)               :: ruled
+    ruled = XOR_char_(s_im1,s_ip1)
+  end function rule90_char_
+
+  function rule150_char_(s_im1,s_i,s_ip1) result(ruled)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Cellular automata rule 150, i.e.                                             !
+    !     s_i(t+1) = s_i-1(t) XOR s_i(t) XOR s_i+1(t)                              !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    character(len=1), intent(in)  :: s_im1, s_i, s_ip1
+    character(len=1)              :: ruled
+    ruled = XOR_char_(s_im1,XOR_char_(s_i,s_ip1))
+  end function rule150_char_
+
+  subroutine rule_90_150_(rule_in,N_bit,rule_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Take integer represented in binary as an array of 1s and 0s then perform rule!
+    ! 90, then rule 150 and return the resultant array of 1s and 0s.               !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! rule_in ::: 1D array of integers, each element should be a 1 or 0. The array !
+    !             represents an integer in binary.                                 !
+    ! N_bit   ::: Integer, the number of bits in the integer represented by        !
+    !             rule_in, i.e. length of rule_in.                                 !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! rule_out ::: 1D array of length N_bits, the input array rule_in with rule 90,!
+    !              then rule 150 applied. Will only contain 1s or 0s.              !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer,                   intent(in)  :: N_bit
+    integer, dimension(N_bit), intent(in)  :: rule_in
+    integer, dimension(N_bit), intent(out) :: rule_out
+
+    integer, dimension(N_bit) :: tmp
+    integer                   :: k_
+    
+    ! First apply rule 90 to the input
+    ! Note we copy this to tmp as we want to find next time step in rule 150 after 90
+    do k_=1,N_bit
+      if (k_==1) then
+        ! Need to wraparound the periodic boundary for the first
+        tmp(1)   = rule90_(rule_in(N_bit),rule_in(1),rule_in(2))
+      else if (k_==N_bit) then
+        ! Also need to wraparound the periodic boundary for the last
+        tmp(N_bit) = rule90_(rule_in(N_bit-1),rule_in(N_bit),rule_in(1))
+      else
+        ! No wraparound needed in the middle of the string
+        tmp(k_) = rule90_(rule_in(k_-1),rule_in(k_),rule_in(k_+1))
+      end if
+    end do
+    
+    ! Now apply rule 150 and return
+    do k_=1,N_bit
+      if (k_==1) then
+        ! Need to wraparound the periodic boundary for the first
+        rule_out(1)   = rule150_(rule_in(N_bit),rule_in(1),rule_in(2))
+      else if (k_==N_bit) then
+        ! Also need to wraparound the periodic boundary for the last
+        rule_out(N_bit) = rule150_(rule_in(N_bit-1),rule_in(N_bit),rule_in(1))
+      else
+        ! No wraparound needed in the middle of the string
+        rule_out(k_) = rule150_(rule_in(k_-1),rule_in(k_),rule_in(k_+1))
+      end if
+    end do
+    
+  end subroutine rule_90_150_
+
+  subroutine bitarr2int32_(bitArr,N_bits,bitInt)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Convert an input array which contains only 1s and 0s to the integer          !
+    ! represented by the binary number in the array.                               !
+    ! E.g. an input array [0,0,0,1,0,1,1,0] would return 22.                       !
+    !                                                                              !
+    ! This routine only works for 32 bit integers, where 1 bit is the sign.        !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! bitArr ::: Integer array, must contain only 1s or 0s, this array represents  !
+    !            an integer in binary and will be converted to a base 10 integer.  !
+    ! N_bits ::: Integer, the number of bits in the binary representation of the   !
+    !            integer, i.e. the length of bitArr.                               !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! bitInt ::: Integer, the integer represented in bitArr in base 10.            !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+
+    integer,                    intent(in)  :: N_bits
+    integer, dimension(N_bits), intent(in)  :: bitArr
+    integer,                    intent(out) :: bitInt
+
+    integer :: pow, i_bit
+
+    ! Initialise everything to 0
+    bitInt = 0
+    pow = 0
+
+    ! Now loop through all elements of the bit array adding their respective values
+    ! to the counter
+    i_bit = N_bits
+    do while (i_bit>0)
+      bitInt = bitInt + ( bitArr(i_bit) * 2**pow )
+      pow   = pow   + 1
+      i_bit = i_bit - 1
+    end do
+    
+  end subroutine bitarr2int32_
+  
 end module RNGutil
 
 
@@ -1048,13 +1262,7 @@ contains
   
   subroutine rand(R)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! Calculate a random number in [0,1) with the Blum Blum Shub RNG [1].          !
-    ! This is done using                                                           !
-    !                                                                              !
-    !      R_{j+1} = R_{j}^2 (mod M)                                               !
-    !                                                                              !
-    ! Where M=p*q for prime p and q. Also we require gcd((p-3)/2,(q-3)/2)          !
-    ! sufficiently small and R_{0} coprime to M.                                   !
+    ! Calculate a random number in [0,1) with LFSR258 [1,2].                       !
     !                                                                              !
     ! RETURNS                                                                      !
     ! =======                                                                      !
@@ -1062,8 +1270,11 @@ contains
     !                                                                              !
     ! REFERENCES                                                                   !
     ! ==========                                                                   !
-    ! [1] Blum L, Blum M, Shub M. A Simple Unpredictable Pseudo-Random Number      !
-    !     Generator. SIAM J Comput. 1986;15(2):364–83.                             !
+    ! [1] P. L’Ecuyer, Tables of maximally equidistributed combined lfsr           !
+    !     generators, Mathematics of Computation of the American Mathematical      !
+    !     Society 68 (225) (1999) 261–269.                                         !
+    ! [2] L'Ecuyer's 1999 random number generator by Alan Miller, available at     !
+    !     https://wp.csiro.au/alanmiller/random/lfsr258.f90, accessed 22/09/2021.  !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     implicit none
     real(kind=dp), intent(out) :: R
@@ -1073,8 +1284,8 @@ contains
 
   subroutine rand_arr(N,Rarr)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! Generate an array of length N containing random numbers in [0,1) generated   !
-    ! with BBS.                                                                    !
+    ! Generate an array of length N containing random numbers in [0,1) using       !
+    ! LFSR258 [1,2].                                                               !
     !                                                                              !
     ! INPUTS                                                                       !
     ! ======                                                                       !
@@ -1086,8 +1297,11 @@ contains
     !                                                                              !
     ! REFERENCES                                                                   !
     ! ==========                                                                   !
-    ! [1] Blum L, Blum M, Shub M. A Simple Unpredictable Pseudo-Random Number      !
-    !     Generator. SIAM J Comput. 1986;15(2):364–83.                             !
+    ! [1] P. L’Ecuyer, Tables of maximally equidistributed combined lfsr           !
+    !     generators, Mathematics of Computation of the American Mathematical      !
+    !     Society 68 (225) (1999) 261–269.                                         !
+    ! [2] L'Ecuyer's 1999 random number generator by Alan Miller, available at     !
+    !     https://wp.csiro.au/alanmiller/random/lfsr258.f90, accessed 22/09/2021.  !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     implicit none
     integer,                     intent(in)  :: N
@@ -1206,3 +1420,294 @@ contains
   
 end module lfsr258
 
+
+
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
+
+
+
+module CA32
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Use a cellular automata in 1D with rule 90 and rule 150 following the ideas  !
+  ! of [1,2] to generate a random bit sequence. Then convert this sequence to an !
+  ! integer to generate all the random numbers required.                         !
+  !                                                                              !
+  ! Note one of the 32 bits is a sign bit, so it is only `really' a 31 bit       !
+  ! `pure' integer.                                                              !
+  !                                                                              !
+  ! CONTAINS                                                                     !
+  ! ========                                                                     !
+  ! setseed        ::: Set the seed of lgm RNG.                                  !
+  ! rand           ::: Generate random number in [0,1) using lgm.                !
+  ! rand_arr       ::: Generate 1D array of N random numbers in [0,1).           !
+  ! rand_range     ::: Generate a random float in a given range.                 !
+  ! rand_range_arr ::: Generate 1D array of N random numbers in given range.     !
+  ! rand_int       ::: Generate random integer in given range.                   !
+  ! rand_int_arr   ::: Generate 1D array of N random integers in given range.    !
+  !                                                                              !
+  ! REFERENCES                                                                   !
+  ! ==========                                                                   !
+  ! [1] Tomassini M, Perrenoud M. Cryptography with cellular automata. Appl Soft !
+  !     Comput. 2001;1(2):151–60.                                                !
+  ! [2] Wolfram S. Random sequence generation by cellular automata. Vol. 7,      !
+  !     Advances in Applied Mathematics. 1986. 123–169 p.                        !
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  use types
+  implicit none
+
+  private
+
+  ! Seed Values
+
+  ! 31 random bits generated with random.org
+  ! (note 31 as 1 is a sign bit in fortran 32 bit integers)
+  integer, dimension(31), save :: last=(/ 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, &
+    0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0 /)
+  
+  ! The number of time steps to run Cellular Automata over
+  integer, save :: CA_N_t = 1024
+  
+  public :: set_seed
+  public :: rand
+  public :: rand_arr
+  public :: rand_range
+  public :: rand_range_arr
+  public :: rand_int
+  public :: rand_int_arr
+  
+contains
+  
+  subroutine set_seed(seed,N_t)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Set the seed values for the cellular automata method.                        !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! seed ::: Character, length 32, all elements of the array must be either 1 or !
+    !          0 and represent the 32 bits of the seed.                            !
+    ! N_t  ::: Integer, the number of time steps the cellular automata will be ran !
+    !          over.                                                               !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! None                                                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : stop_E
+    implicit none
+
+    character(len=32), intent(in) :: seed
+    integer,           intent(in) :: N_t
+    
+    integer :: i_
+    
+    ! Error checks for seed
+    if (len(seed) /= 32 ) call stop_E("Length of seed must be 32 binary bits")
+    ! Check that each element of the input is either a 1 or 0
+    do i_=1,32
+      if (seed(i_:i_)/="1".or.seed(i_:i_)/="0") then
+        call stop_E("Each element of seed string must be 1 or 0")
+      end if
+    end do
+
+    ! Error checks for numbers of things to run
+    if (N_t<2) call stop_E("Must run CA over at least two time steps")
+
+    ! All error checks passed, so set the seeds
+    do i_=1,32
+      read(seed(i_:i_),*) last(i_)
+    end do
+    CA_N_t = N_t
+
+  end subroutine set_seed
+  
+  subroutine rand(R)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Calculate a random number in [0,1) by running the cellular automata over     !
+    ! CA_N_t time steps. Then the array of binary values is converted to an integer!
+    ! and divided by 2**31-1 to find the random float.                             !
+    !                                                                              !
+    ! NOTES                                                                        !
+    ! =====                                                                        !
+    ! We use an array of 31 bits rather than 32, as for a 32 bit integer in base   !
+    ! Fortran one bit is the sign of the integer. This could be changed fairly     !
+    ! simply (by using a select_int_kind). However, this is left to either future  !
+    ! work or after further experimentation.                                       !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Float, random number in [0,1).                                         !
+    !                                                                              !
+    ! REFERENCES                                                                   !
+    ! ==========                                                                   !
+    ! [1] Tomassini M, Perrenoud M. Cryptography with cellular automata. Appl Soft !
+    !     Comput. 2001;1(2):151–60.                                                !
+    ! [2] Wolfram S. Random sequence generation by cellular automata. Vol. 7,      !
+    !     Advances in Applied Mathematics. 1986. 123–169 p.                        !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : stop_E, rule_90_150_, bitarr2int32_
+    implicit none
+    real(kind=dp), intent(out) :: R
+    
+    integer, dimension(31) :: automata
+    integer                :: tmp_int, m_
+    
+    ! Do so many time steps
+    do m_=1,CA_N_t
+      ! Run the rule 90 then 150
+      call rule_90_150_(last,31,automata)
+      ! Done one step so copy back to initial buffer point
+      last = automata
+    end do
+
+    ! Now we convert the array of bits to an integer
+    call bitarr2int32_(last,31,tmp_int)
+
+    ! And now convert to a flow by dividing by maximum number
+    R = real(tmp_int,dp)/real(2147483647,dp)
+
+  end subroutine rand
+
+  subroutine rand_arr(N,Rarr)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate an array of length N containing random numbers in [0,1) generated   !
+    ! with the cellular automata method.                                           !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! N ::: Integer, number of random numbers in Rarr (also length of Rarr).       !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! Rarr ::: 1D float array, length N, contains random floats in [0,1).          !
+    !                                                                              !
+    ! REFERENCES                                                                   !
+    ! ==========                                                                   !
+    ! [1] Tomassini M, Perrenoud M. Cryptography with cellular automata. Appl Soft !
+    !     Comput. 2001;1(2):151–60.                                                !
+    ! [2] Wolfram S. Random sequence generation by cellular automata. Vol. 7,      !
+    !     Advances in Applied Mathematics. 1986. 123–169 p.                        !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    implicit none
+    integer,                     intent(in)  :: N
+    real(kind=dp), dimension(N), intent(out) :: Rarr
+    integer                                  :: i_
+    do i_=1,N
+      call rand(Rarr(i_))
+    end do
+  end subroutine rand_arr
+
+  subroutine rand_range(a,b,R)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a random number in [0,1) using this modules rand routine, then      !
+    ! scale this random number to be in the range [a,b).                           !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : rand_range_
+    implicit none
+    real(kind=dp), intent(in)  :: a, b
+    real(kind=dp), intent(out) :: R
+    real(kind=dp)              :: R_tmp
+    ! Gen a random number
+    call rand(R_tmp)
+    ! And then scale it to the desired range
+    call rand_range_(R_tmp,a,b,R)
+  end subroutine rand_range
+  
+  subroutine rand_range_arr(N,a,b,R)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a 1D array of length N containing random numbers in [0,1) using     !
+    ! this modules rand routine, then scale this random number to be in the        !
+    ! range [a,b).                                                                 !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! N ::: Integer, The size of the desired output array R.                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : rand_range_arr_
+    implicit none
+    integer,                     intent(in)  :: N
+    real(kind=dp),               intent(in)  :: a, b
+    real(kind=dp), dimension(N), intent(out) :: R
+    real(kind=dp), dimension(N)              :: R_tmp
+    ! Gen an array of random numbers, temp for now as we scale them into the output array
+    call rand_arr(N,R_tmp)
+    ! And then scale the array
+    call rand_range_arr_(R_tmp,N,a,b,R)
+  end subroutine rand_range_arr
+  
+  subroutine rand_int(a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a random integer in [a,b) using this modules rand routine, then     !
+    ! scale this random number to be an integer in the range [a,b).                !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! a ::: Integer, start of range of integers to scale random number to.         !
+    ! b ::: Integer, end of range of integer to scale random number to.            !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random integer in range [a,b).                                         !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : rand_int_
+    implicit none
+    integer,       intent(in)  :: a, b
+    integer,       intent(out) :: R_out
+    real(kind=dp)              :: R_tmp
+    ! Gen a random number
+    call rand(R_tmp)
+    ! And then scale it to the desired range and convert to floored integers
+    call rand_int_(R_tmp,a,b,R_out)
+  end subroutine rand_int
+  
+  subroutine rand_int_arr(N,a,b,R_out)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! Generate a 1D array of length N containing random numbers in [0,1) using     !
+    ! this modules rand routine, then scale this random number to be in the        !
+    ! range [a,b).                                                                 !
+    !                                                                              !
+    ! INPUTS                                                                       !
+    ! ======                                                                       !
+    ! N ::: Integer, The size of the desired output array R.                       !
+    ! a ::: Real, start of range to scale random number to.                        !
+    ! b ::: Real, end of range to scale random number to.                          !
+    !                                                                              !
+    ! RETURNS                                                                      !
+    ! =======                                                                      !
+    ! R ::: Random number in range [a,b).                                          !
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    use RNGutil, only : rand_int_arr_
+    implicit none
+    integer,                     intent(in)  :: N
+    integer,                     intent(in)  :: a, b
+    integer,       dimension(N), intent(out) :: R_out
+    real(kind=dp), dimension(N)              :: R_tmp
+    ! Gen an array of random numbers, temp for now as we scale them into the output array
+    call rand_arr(N,R_tmp)
+    ! Then scale the array and convert to floored integers
+    call rand_int_arr_(R_tmp,N,a,b,R_out)
+  end subroutine rand_int_arr
+  
+end module CA32
+
+
+
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
+!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!---!
