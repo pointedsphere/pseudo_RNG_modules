@@ -61,7 +61,7 @@ class rand_test:
     
 if __name__ == "__main__":
 
-    N = 10000    # Number of random numbers to generate
+    N = 100000    # Number of random numbers to generate
     numbins = 100 # Number of bins for graphing/chi-squared testing
 
     # a = rngutil.bitarr2int32_([1,0,1,0,1,0,1,0,0,0,1,0,0,0,0,1,0,1,0,0,1,0,1,1,0,0,0,1,1,0,1,0],32)
